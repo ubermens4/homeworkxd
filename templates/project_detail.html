@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} — ProjectTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <div>
+        <a href="{{ url_for('index') }}" class="text-muted small">← Все проекты</a>
+        <h1 class="h3 mt-1">{{ project.name }}</h1>
+        {% if project.description %}
+            <p class="text-muted">{{ project.description }}</p>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('project_edit', project_id=project.id) }}" class="btn btn-outline-secondary">Редактировать</a>
+        <form method="post" action="{{ url_for('project_delete', project_id=project.id) }}"
+              onsubmit="return confirm('Удалить проект «{{ project.name }}» и все его задачи?')">
+            <button type="submit" class="btn btn-outline-danger">Удалить проект</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Начало</div>
+                <strong>{{ project.start_date.strftime('%d.%m.%Y') }}</strong>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Дедлайн</div>
+                <strong>{{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '—' }}</strong>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Задач</div>
+                <strong>{{ tasks | length }}</strong>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="small text-muted">Прогресс</div>
+                <strong>{{ project.progress() }}%</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% set progress = project.progress() %}
+<div class="progress mb-4" style="height: 10px;">
+    <div class="progress-bar
+        {% if progress == 100 %}bg-success
+        {% elif progress >= 50 %}bg-warning
+        {% else %}bg-primary{% endif %}"
+        style="width: {{ progress }}%"></div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 mb-0">Задачи</h2>
+    <a href="{{ url_for('task_new', project_id=project.id) }}" class="btn btn-primary btn-sm">+ Добавить задачу</a>
+</div>
+
+{% if tasks %}
+<div class="list-group">
+    {% for task in tasks %}
+    {% set priority_color = 'danger' if task.priority == 'Высокий' else ('warning' if task.priority == 'Средний' else 'success') %}
+    {% set status_color = 'success' if task.status == 'Завершена' else ('info' if task.status == 'На проверке' else ('primary' if task.status == 'В работе' else 'secondary')) %}
+    <div class="list-group-item">
+        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+            <div>
+                <span class="fw-semibold {% if task.status == 'Завершена' %}text-decoration-line-through text-muted{% endif %}">
+                    {{ task.name }}
+                </span>
+                <div class="mt-1">
+                    <span class="badge bg-{{ status_color }}">{{ task.status }}</span>
+                    <span class="badge bg-{{ priority_color }}">{{ task.priority }}</span>
+                    {% if task.assignee %}
+                        <span class="badge bg-light text-dark border">👤 {{ task.assignee }}</span>
+                    {% endif %}
+                </div>
+                {% if task.description %}
+                    <p class="text-muted small mb-0 mt-1">{{ task.description }}</p>
+                {% endif %}
+                <small class="text-muted">{{ task.created_at.strftime('%d.%m.%Y') }}</small>
+            </div>
+            <div class="d-flex gap-2 flex-shrink-0">
+                <a href="{{ url_for('task_edit', task_id=task.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+                <form method="post" action="{{ url_for('task_delete', task_id=task.id) }}"
+                      onsubmit="return confirm('Удалить задачу «{{ task.name }}»?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-4 text-muted">
+    <p>Задач пока нет</p>
+    <a href="{{ url_for('task_new', project_id=project.id) }}" class="btn btn-primary btn-sm">Добавить задачу</a>
+</div>
+{% endif %}
+{% endblock %}

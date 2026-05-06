@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if project %}Редактировать проект{% else %}Новый проект{% endif %} — ProjectTracker{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('index') }}" class="text-muted small">← Все проекты</a>
+    <h1 class="h3 mt-1">{% if project %}Редактировать проект{% else %}Новый проект{% endif %}</h1>
+</div>
+
+<div class="card shadow-sm" style="max-width: 600px;">
+    <div class="card-body">
+        <form method="post" novalidate>
+            <div class="mb-3">
+                <label for="name" class="form-label">Название <span class="text-danger">*</span></label>
+                <input type="text" id="name" name="name" class="form-control"
+                       value="{{ project.name if project else '' }}"
+                       placeholder="Название проекта" required autofocus>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Описание</label>
+                <textarea id="description" name="description" class="form-control" rows="3"
+                          placeholder="Что нужно сделать...">{{ project.description if project else '' }}</textarea>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col">
+                    <label for="start_date" class="form-label">Дата начала <span class="text-danger">*</span></label>
+                    <input type="date" id="start_date" name="start_date" class="form-control"
+                           value="{{ project.start_date.isoformat() if project else '' }}" required>
+                </div>
+                <div class="col">
+                    <label for="end_date" class="form-label">Дата окончания</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control"
+                           value="{{ project.end_date.isoformat() if project and project.end_date else '' }}">
+                    <div class="form-text">Можно оставить пустым</div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Отмена</a>
+                <button type="submit" class="btn btn-primary">
+                    {% if project %}Сохранить{% else %}Создать проект{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const start = document.getElementById('start_date').value;
+        const end = document.getElementById('end_date').value;
+        if (start && end && end < start) {
+            e.preventDefault();
+            alert('Дата окончания не может быть раньше даты начала!');
+        }
+    });
+</script>
+{% endblock %}
